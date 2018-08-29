@@ -61,21 +61,16 @@ namespace MicrosoftGraph.Daemon.Utilities
         {
             try
             {
-                Trace.TraceInformation($"Upload triggered - saving to {driveName}");
                 var graphClient = await CreateGraphServiceClientAsync();
 
-                Trace.TraceInformation($"Attempting to retrieve site for host: {_graphHostName}, relativepath: {_graphSiteRelativePath}");
                 var site = await graphClient.Sites.GetByPath(_graphSiteRelativePath, _graphHostName).Request().GetAsync();
             
                 //NOTE: There are pages in the drives, this will only find drives on the first page
-                Trace.TraceInformation($"Retrieving Drives for site id {site.Id}");
                 var drives = await graphClient.Sites[site.Id].Drives.Request().GetAsync();
                 var drive = drives.First(x => x.Name == driveName);           
 
-                Trace.TraceInformation($"Uploading file to site drive {drive.Id}");
                 var file = await graphClient.Drives[drive.Id].Root.ItemWithPath(fileNameWithExtension).Content.Request().PutAsync<DriveItem>(fileToUpload);
 
-                Trace.TraceInformation($"File uploaded successfully: ID {file.Id}");
                 return file.Id;
             }
             catch (Exception e)
@@ -91,7 +86,6 @@ namespace MicrosoftGraph.Daemon.Utilities
         /// <returns></returns>
         private async Task<string> AuthenticateToGraphAsync()
         {
-            Trace.TraceInformation("Retrieving token for daemon client");
             MSALCache appTokenCache = new MSALCache(_clientId);
 
             ConfidentialClientApplication daemonClient = new ConfidentialClientApplication(_clientId, string.Format(_authorityFormat, _tenantId), _redirectUri, new ClientCredential(_clientSecret), null, appTokenCache.GetMsalCacheInstance());
@@ -113,7 +107,6 @@ namespace MicrosoftGraph.Daemon.Utilities
         {
             string authenticationToken = await AuthenticateToGraphAsync(); 
 
-            Trace.TraceInformation("Creating graph service client for authentication token");
             GraphServiceClient graphClient = new GraphServiceClient(
                 _graphBaseUrl,
                 new DelegateAuthenticationProvider(
